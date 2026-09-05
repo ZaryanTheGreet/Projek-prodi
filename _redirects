@@ -1,0 +1,6 @@
+# Mengubah URL /admin menjadi membuka file admin.html secara halus (URL tetap /admin)
+/admin    /admin.html    200
+
+# Opsional: Jika user iseng mengetik .html, arahkan langsung ke URL bersihnya
+/admin.html    /admin    301!
+
