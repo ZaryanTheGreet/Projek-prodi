@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — AP</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --navy:#0F1E3D; --navy-soft:#16294f; --gold:#C9A961; --cream:#F7F5F0; --ink:#1A1A1A; --line:rgba(15,30,61,.15);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Inter,system-ui,sans-serif;background:var(--cream);color:var(--ink);}
+  header{background:var(--navy);color:var(--cream);padding:1.25rem 2rem;display:flex;justify-content:space-between;align-items:center;}
+  header h1{font-size:1.1rem;font-weight:600;}
+  #logoutBtn{background:none;border:1px solid var(--gold);color:var(--gold);padding:.5rem 1rem;cursor:pointer;border-radius:4px;transition:background .2s ease,color .2s ease;}
+  #logoutBtn:hover{background:var(--gold);color:var(--navy);}
+  main{max-width:960px;margin:0 auto;padding:2rem;}
+
+  /* --- Login (full-screen, centered, dipoles) --- */
+  #loginScreen{
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(201,169,97,0.08), transparent 40%),
+      linear-gradient(160deg, var(--navy), var(--navy-soft));
+    padding:1.5rem;
+  }
+  .login-card{
+    width:100%; max-width:380px;
+    background:#fff; border-radius:14px;
+    padding:2.5rem 2.25rem 2rem;
+    box-shadow:0 30px 60px rgba(0,0,0,.35);
+    animation:cardIn .5s ease;
+  }
+  @keyframes cardIn{ from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);} }
+  .login-mark{
+    width:6rem; height:6rem; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 1rem;
+  }
+  .login-card h2{ text-align:center; font-size:1.3rem; margin-bottom:.35rem; color:var(--navy); }
+  .login-card .login-sub{ text-align:center; font-size:.85rem; color:rgba(26,26,26,.5); margin-bottom:1.75rem; }
+  .field-label{ display:block; font-size:.8rem; font-weight:600; color:rgba(26,26,26,.65); margin-bottom:.35rem; }
+  .field-wrap{ margin-bottom:1.1rem; }
+  .login-card input{
+    width:100%; padding:.75rem .9rem; border:1px solid var(--line); border-radius:8px;
+    font-size:.95rem; transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  .login-card input:focus{ outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,169,97,.2); }
+  .password-wrap{ position:relative; }
+  .password-wrap input{ padding-right:2.75rem; }
+  .toggle-eye{
+    position:absolute; right:.6rem; top:50%; transform:translateY(-50%);
+    background:none; border:none; cursor:pointer; padding:.3rem;
+    display:flex; align-items:center; justify-content:center;
+    color:rgba(26,26,26,.45);
+  }
+  .toggle-eye:hover{ color:var(--navy); }
+  .toggle-eye:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; border-radius:4px; }
+  .login-card button[type="submit"]{
+    width:100%; padding:.8rem; background:var(--navy); color:#fff; border:none;
+    border-radius:8px; cursor:pointer; font-weight:600; font-size:.95rem;
+    transition:background .2s ease, transform .1s ease;
+  }
+  .login-card button[type="submit"]:hover{ background:var(--navy-soft); }
+  .login-card button[type="submit"]:active{ transform:scale(0.98); }
+  .login-card button[type="submit"]:disabled{ opacity:.6; cursor:not-allowed; }
+  #loginError{ color:#B23A2E; font-size:.83rem; margin-top:.85rem; min-height:1.2em; text-align:center; }
+
+  /* --- Tabs --- */
+  .tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;border-bottom:1px solid var(--line);}
+  .tab-btn{padding:.7rem 1.2rem;background:none;border:none;cursor:pointer;font-weight:600;color:rgba(26,26,26,.5);border-bottom:2px solid transparent;}
+  .tab-btn.active{color:var(--navy);border-color:var(--gold);}
+
+  /* --- Form --- */
+  .form-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:1.25rem;margin-bottom:2rem;}
+  .form-card h3{margin-bottom:1rem;font-size:1rem;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem;}
+  .form-row.full{grid-template-columns:1fr;}
+  .form-card input,.form-card textarea,.form-card select{width:100%;padding:.6rem;border:1px solid var(--line);border-radius:4px;font-family:inherit;}
+  .form-card textarea{min-height:70px;resize:vertical;}
+  /* checkbox harus dikecualikan dari style input di atas, kalau nggak dia ikut jadi width:100% + border + padding = kotak gede aneh */
+  .checkbox-row{display:flex;align-items:center;gap:.6rem;font-size:.9rem;color:var(--ink);cursor:pointer;padding:.3rem 0;}
+  .checkbox-row input[type="checkbox"]{width:18px;height:18px;padding:0;border:none;border-radius:0;accent-color:var(--gold);cursor:pointer;flex-shrink:0;}
+  .form-actions{display:flex;gap:.5rem;margin-top:.5rem;}
+  .btn{padding:.6rem 1.1rem;border:none;border-radius:4px;cursor:pointer;font-weight:600;}
+  .btn-primary{background:var(--navy);color:#fff;}
+  .btn-ghost{background:none;border:1px solid var(--line);color:var(--ink);}
+
+  /* --- List --- */
+  .item-row{display:flex;gap:1rem;align-items:center;background:#fff;border:1px solid var(--line);border-radius:8px;padding:.75rem 1rem;margin-bottom:.6rem;}
+  .item-row img{width:52px;height:52px;object-fit:cover;border-radius:6px;background:#eee;flex-shrink:0;}
+  .item-info{flex:1;min-width:0;}
+  .item-info strong{display:block;font-size:.95rem;}
+  .item-info span{font-size:.8rem;color:rgba(26,26,26,.55);}
+  .item-actions{display:flex;gap:.4rem;flex-shrink:0;}
+  .icon-btn{padding:.4rem .7rem;font-size:.8rem;border-radius:4px;cursor:pointer;border:1px solid var(--line);background:#fff;}
+  .icon-btn.danger{border-color:#B23A2E;color:#B23A2E;}
+  .save-msg{font-size:.85rem;min-height:1.2em;margin-top:.5rem;}
+</style>
+</head>
+<body>
+
+<!-- ====================== LOGIN ====================== -->
+<div id="loginScreen">
+  <form class="login-card" id="loginForm">
+    <img class="login-mark" src="logo-AP2.png"></img>
+    <h2>Login Admin</h2>
+    <p class="login-sub">Khusus pengelola website kelas AP</p>
+
+    <div class="field-wrap">
+      <label class="field-label" for="loginEmail">Email</label>
+      <input type="email" id="loginEmail" placeholder="admin@contoh.com" autocomplete="username" required>
+    </div>
+
+    <div class="field-wrap">
+      <label class="field-label" for="loginPassword">Password</label>
+      <div class="password-wrap">
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required>
+        <button type="button" class="toggle-eye" id="toggleEye" aria-label="Tampilkan password" aria-pressed="false">
+          <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <button type="submit" id="loginBtn">Masuk</button>
+    <p id="loginError"></p>
+  </form>
+</div>
+
+<!-- ====================== DASHBOARD ====================== -->
+<div id="dashboard" style="display:none;">
+  <header>
+    <h1>Admin — Website AP</h1>
+    <button id="logoutBtn">Keluar</button>
+  </header>
+  <main>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="pengurus">Struktur Kelembagaan</button>
+      <button class="tab-btn" data-tab="anggota">Anggota Kelas</button>
+      <button class="tab-btn" data-tab="kegiatan">Kegiatan / Galeri</button>
+    </div>
+
+    <div id="tab-pengurus" class="tab-panel"></div>
+    <div id="tab-anggota" class="tab-panel" style="display:none;"></div>
+    <div id="tab-kegiatan" class="tab-panel" style="display:none;"></div>
+  </main>
+</div>
+
+<script>
+// =====================================================================
+// GANTI DUA BARIS INI dengan URL & anon key dari project Supabase lo
+// (Settings > API di dashboard Supabase). Anon key AMAN untuk taruh
+// di frontend — keamanan sebenarnya dijaga oleh RLS di database.
+// =====================================================================
+const SUPABASE_URL = "https://eeurncjtbbelvpekdiaf.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldXJuY2p0YmJlbHZwZWtkaWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1ODk3OTAsImV4cCI6MjEwNDE2NTc5MH0.Rqeti1o06LEZhxjkJVc4E8sawDqQvOvWJ9nw6ck1dWQ";
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const loginScreen = document.getElementById('loginScreen');
+const dashboard = document.getElementById('dashboard');
+const loginError = document.getElementById('loginError');
+const loginForm = document.getElementById('loginForm');
+const loginBtn = document.getElementById('loginBtn');
+
+// ---------- Toggle lihat/sembunyikan password ----------
+const toggleEye = document.getElementById('toggleEye');
+const eyeIcon = document.getElementById('eyeIcon');
+const loginPasswordInput = document.getElementById('loginPassword');
+const EYE_OPEN = `<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path><circle cx="12" cy="12" r="3"></circle>`;
+const EYE_CLOSED = `<path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a19.7 19.7 0 0 1 4.22-5.06M9.9 4.24A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a19.65 19.65 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>`;
+toggleEye.addEventListener('click', () => {
+  const showing = loginPasswordInput.type === 'text';
+  loginPasswordInput.type = showing ? 'password' : 'text';
+  eyeIcon.innerHTML = showing ? EYE_OPEN : EYE_CLOSED;
+  toggleEye.setAttribute('aria-pressed', String(!showing));
+  toggleEye.setAttribute('aria-label', showing ? 'Tampilkan password' : 'Sembunyikan password');
+});
+
+// ---------- AUTH ----------
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = loginPasswordInput.value;
+  loginError.textContent = '';
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Memproses...';
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  loginBtn.disabled = false;
+  loginBtn.textContent = 'Masuk';
+  if (error) { loginError.textContent = 'Login gagal: ' + error.message; return; }
+  showDashboard();
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await sb.auth.signOut();
+  location.reload();
+});
+
+async function checkSession() {
+  const { data } = await sb.auth.getSession();
+  if (data.session) showDashboard(); else showLogin();
+}
+function showLogin(){ loginScreen.style.display='flex'; dashboard.style.display='none'; }
+function showDashboard(){
+  loginScreen.style.display='none'; dashboard.style.display='block';
+  loadTab('pengurus'); loadTab('anggota'); loadKegiatan();
+}
+checkSession();
+
+// ---------- TABS ----------
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.style.display='none');
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).style.display='block';
+  });
+});
+
+// ---------- HELPERS ----------
+async function uploadPhoto(file, folder){
+  const path = `${folder}/${Date.now()}-${file.name.replace(/\s+/g,'_')}`;
+  const { error } = await sb.storage.from('photos').upload(path, file, { upsert:true });
+  if (error) throw error;
+  const { data } = sb.storage.from('photos').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+function fallbackAvatar(name, hex){
+  return `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(name)}&backgroundColor=${hex||'0f1e3d'}`;
+}
+
+// ---------- ORG_MEMBERS (pengurus & anggota pakai render sama) ----------
+// PENTING: form Pengurus dan Anggota ada BERBARENGAN di DOM (cuma disembunyikan
+// via display:none, bukan dihapus). Makanya semua id di dalam form di-prefix
+// dengan `category` biar unik, dan semua pencarian elemen di-scope ke `container`
+// (bukan document.getElementById global) — ini yang kemarin jadi sumber bug:
+// dua form pakai id sama, jadi klik "Tambah" di Anggota malah kena elemen
+// milik Pengurus karena getElementById cuma ambil match pertama di halaman.
+function renderMemberForm(container, category, editItem){
+  const isEdit = !!editItem;
+  const p = 'f_' + category + '_'; // prefix unik per kategori
+  container.innerHTML = `
+    <div class="form-card">
+      <h3>${isEdit ? 'Edit' : 'Tambah'} ${category === 'pengurus' ? 'Pengurus' : 'Anggota'}</h3>
+      <div class="form-row">
+        <input type="text" id="${p}role" placeholder="Jabatan / Role" value="${editItem?.role||''}">
+        <input type="text" id="${p}name" placeholder="Nama" value="${editItem?.name||''}">
+      </div>
+      <div class="form-row full">
+        <textarea id="${p}fact" placeholder="Deskripsi / fun fact">${editItem?.fact||''}</textarea>
+      </div>
+      <div class="form-row full">
+        <input type="file" id="${p}photo" accept="image/*">
+      </div>
+      ${category==='pengurus' ? `<div class="form-row full"><label class="checkbox-row"><input type="checkbox" id="${p}lead" ${editItem?.is_lead?'checked':''}> Jadikan Kepala Kelas (pusat benang merah)</label></div>` : ''}
+      <div class="form-actions">
+        <button class="btn btn-primary" id="${p}save">${isEdit?'Simpan Perubahan':'Tambah'}</button>
+        ${isEdit ? `<button class="btn btn-ghost" id="${p}cancel">Batal</button>` : ''}
+      </div>
+      <p class="save-msg" id="${p}msg"></p>
+    </div>`;
+
+  container.querySelector('#'+p+'save').addEventListener('click', async ()=>{
+    const msg = container.querySelector('#'+p+'msg');
+    msg.textContent = 'Menyimpan...';
+    try{
+      const role = container.querySelector('#'+p+'role').value.trim();
+      const name = container.querySelector('#'+p+'name').value.trim();
+      const fact = container.querySelector('#'+p+'fact').value.trim();
+      const file = container.querySelector('#'+p+'photo').files[0];
+      const is_lead = category==='pengurus' ? container.querySelector('#'+p+'lead').checked : false;
+      if(!name){ msg.textContent = 'Nama wajib diisi.'; return; }
+
+      let photo_url = editItem?.photo_url || null;
+      if (file) photo_url = await uploadPhoto(file, category);
+
+      // Kepala Kelas cuma boleh satu — lepas centang dari yang lain kalau ada yang baru dijadikan lead
+      if (is_lead) {
+        await sb.from('org_members').update({is_lead:false}).eq('category','pengurus').eq('is_lead', true);
+      }
+
+      if (isEdit){
+        const { error } = await sb.from('org_members').update({role,name,fact,photo_url,is_lead}).eq('id', editItem.id);
+        if (error) throw error;
+      } else {
+        const { error } = await sb.from('org_members').insert([{category,role,name,fact,photo_url,is_lead,order_index:999}]);
+        if (error) throw error;
+      }
+      msg.textContent = 'Tersimpan.';
+      loadTab(category);
+    }catch(e){ msg.textContent = 'Gagal: '+e.message; }
+  });
+
+  if (isEdit) container.querySelector('#'+p+'cancel').addEventListener('click', ()=>loadTab(category));
+}
+
+async function loadTab(category){
+  const container = document.getElementById('tab-'+category);
+  const { data, error } = await sb.from('org_members').select('*').eq('category', category).order('order_index');
+  container.innerHTML = '';
+  const formHolder = document.createElement('div');
+  container.appendChild(formHolder);
+  renderMemberForm(formHolder, category, null);
+
+  const listHolder = document.createElement('div');
+  container.appendChild(listHolder);
+
+  if (error){ listHolder.textContent = 'Gagal memuat data: '+error.message; return; }
+
+  data.forEach(item=>{
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+      <img src="${item.photo_url || fallbackAvatar(item.name)}" alt="">
+      <div class="item-info">
+        <strong>${item.name} ${item.is_lead?'⭐':''}</strong>
+        <span>${item.role}</span>
+      </div>
+      <div class="item-actions">
+        <button class="icon-btn" data-action="edit">Edit</button>
+        <button class="icon-btn danger" data-action="delete">Hapus</button>
+      </div>`;
+    row.querySelector('[data-action="edit"]').addEventListener('click', ()=>{
+      renderMemberForm(formHolder, category, item);
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+    row.querySelector('[data-action="delete"]').addEventListener('click', async ()=>{
+      if(!confirm(`Hapus ${item.name}?`)) return;
+      const { error } = await sb.from('org_members').delete().eq('id', item.id);
+      if (error) alert('Gagal hapus: '+error.message); else loadTab(category);
+    });
+    listHolder.appendChild(row);
+  });
+}
+
+// ---------- KEGIATAN ----------
+function renderActivityForm(container, editItem){
+  const isEdit = !!editItem;
+  container.innerHTML = `
+    <div class="form-card">
+      <h3>${isEdit?'Edit':'Tambah'} Kegiatan</h3>
+      <div class="form-row">
+        <input type="text" id="a_year" placeholder="Tahun" value="${editItem?.year||''}">
+        <input type="text" id="a_title" placeholder="Judul kegiatan" value="${editItem?.title||''}">
+      </div>
+      <div class="form-row full">
+        <textarea id="a_desc" placeholder="Deskripsi">${editItem?.description||''}</textarea>
+      </div>
+      <div class="form-row full">
+        <input type="file" id="a_photo" accept="image/*">
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" id="a_save">${isEdit?'Simpan Perubahan':'Tambah'}</button>
+        ${isEdit ? '<button class="btn btn-ghost" id="a_cancel">Batal</button>' : ''}
+      </div>
+      <p class="save-msg" id="a_msg"></p>
+    </div>`;
+
+  container.querySelector('#a_save').addEventListener('click', async ()=>{
+    const msg = container.querySelector('#a_msg');
+    msg.textContent = 'Menyimpan...';
+    try{
+      const year = container.querySelector('#a_year').value.trim();
+      const title = container.querySelector('#a_title').value.trim();
+      const description = container.querySelector('#a_desc').value.trim();
+      const file = container.querySelector('#a_photo').files[0];
+      if(!title){ msg.textContent = 'Judul wajib diisi.'; return; }
+
+      let photo_url = editItem?.photo_url || null;
+      if (file) photo_url = await uploadPhoto(file, 'kegiatan');
+
+      if (isEdit){
+        const { error } = await sb.from('activities').update({year,title,description,photo_url}).eq('id', editItem.id);
+        if (error) throw error;
+      } else {
+        const { error } = await sb.from('activities').insert([{year,title,description,photo_url,order_index:999}]);
+        if (error) throw error;
+      }
+      msg.textContent = 'Tersimpan.';
+      loadKegiatan();
+    }catch(e){ msg.textContent = 'Gagal: '+e.message; }
+  });
+
+  if (isEdit) container.querySelector('#a_cancel').addEventListener('click', loadKegiatan);
+}
+
+async function loadKegiatan(){
+  const container = document.getElementById('tab-kegiatan');
+  const { data, error } = await sb.from('activities').select('*').order('order_index');
+  container.innerHTML = '';
+  const formHolder = document.createElement('div');
+  container.appendChild(formHolder);
+  renderActivityForm(formHolder, null);
+
+  const listHolder = document.createElement('div');
+  container.appendChild(listHolder);
+  if (error){ listHolder.textContent = 'Gagal memuat data: '+error.message; return; }
+
+  data.forEach(item=>{
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+      <img src="${item.photo_url || 'https://placehold.co/60x60?text=%20'}" alt="">
+      <div class="item-info">
+        <strong>${item.title}</strong>
+        <span>${item.year} — ${item.description}</span>
+      </div>
+      <div class="item-actions">
+        <button class="icon-btn" data-action="edit">Edit</button>
+        <button class="icon-btn danger" data-action="delete">Hapus</button>
+      </div>`;
+    row.querySelector('[data-action="edit"]').addEventListener('click', ()=>{
+      renderActivityForm(formHolder, item);
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+    row.querySelector('[data-action="delete"]').addEventListener('click', async ()=>{
+      if(!confirm(`Hapus "${item.title}"?`)) return;
+      const { error } = await sb.from('activities').delete().eq('id', item.id);
+      if (error) alert('Gagal hapus: '+error.message); else loadKegiatan();
+    });
+    listHolder.appendChild(row);
+  });
+}
+</script>
+</body>
+</html>

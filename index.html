@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP — Administrasi Pendidikan</title>
+<!-- 1. JALUR CEPAT PRECONNECT -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- 2. FONT AWESOME CDN (Gue tambahin di sini bro!) -->
+    <!-- 2. FONT AWESOME CDN (Link utuh dan benar) -->
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+
+
+    <!-- 3. AMBIL FONT POPPINS / PLAYFAIR -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  
+ 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Caveat:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --navy: #0F1E3D;
+    --navy-soft: #16294f;
+    --gold: #C9A961;
+    --cream: #F7F5F0;
+    --ink: #1A1A1A;
+    --kraft: #A9825C;
+    --kraft-dark: #8C6A47;
+    --line: rgba(15, 30, 61, 0.12);
+    --serif: 'Fraunces', serif;
+    --sans: 'Inter', sans-serif;
+    --hand: 'Caveat', cursive;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--cream);
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+
+  body.locked, body.no-scroll { overflow: hidden; height: 100vh; }
+
+  a { text-decoration: none; color: inherit; }
+  ul { list-style: none; }
+  button { font-family: inherit; }
+
+  /* ===== Gerbang Masuk ===== */
+  .gate {
+    position: fixed; inset: 0; z-index: 999;
+    background: var(--navy); color: var(--cream);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: opacity 0.9s ease, visibility 0.9s ease;
+  }
+  .gate.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  .gate-mark { font-family: var(--serif); font-size: clamp(3rem, 10vw, 6rem); font-weight: 600; animation: gatePulse 2.4s ease-in-out infinite; }
+  @keyframes gatePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+  .gate-sub { margin-top: 1.25rem; font-size: 0.85rem; color: rgba(247, 245, 240, 0.6); }
+  .gate-ring { position: absolute; width: 220px; height: 220px; border: 1px solid rgba(201, 169, 97, 0.3); border-radius: 50%; animation: ringGrow 3s ease-in-out infinite; }
+  @keyframes ringGrow { 0% { transform: scale(0.8); opacity: 0.6; } 100% { transform: scale(1.6); opacity: 0; } }
+
+/* --- CSS DEKTOP BROWSER (NORMAL & AMAN) --- */
+.nav {
+  position: sticky; 
+  top: 0; 
+  z-index: 100;
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; /* Membuat logo di kiri, menu/hamburger di kanan */
+  padding: 1rem 2rem;
+  background: rgba(247, 245, 240, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
+.nav-mark { 
+  width: 5rem; 
+  height: 5rem; 
+}
+
+.nav-links { 
+  display: flex; 
+  gap: 2.5rem; 
+  list-style: none;
+}
+
+.nav-links a { 
+  font-size: 0.9rem; 
+  font-weight: 500; 
+  color: var(--navy); 
+  text-decoration: none; 
+  transition: color 0.2s ease;   
+}
+
+.nav-links a:hover { 
+  color: var(--gold); 
+}
+
+/* Styling Tombol Hamburger Standar */
+.hamburger-btn {
+  display: none; /* Sembunyikan di desktop */
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--navy); 
+  padding: 5px;
+  transition: color 0.3s ease;
+}
+
+/* Laci Samping Mobile */
+.nav-mobile-wrapper {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 55vw;
+  height: 60vh; 
+  background-color: black;
+  z-index: 1000; /* Di bawah tombol hamburger mobile */
+  padding: 90px 20px 20px 20px;
+  transform: translateX(100%);
+  transition: transform 0.4s ease;
+  background: rgba(247, 245, 240, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
+.nav-mobile-wrapper.active {
+  transform: translateX(0);
+}
+
+.mobile-links {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  list-style: none;
+}
+
+.mobile-links a {
+  color: black;
+  text-decoration: none;
+  display: block;
+  padding: 10px;
+  font-size: 1.05rem;
+  transition: color 0.2s ease;
+}
+.mobile-links a:hover {
+    color: var(--gold);   
+}
+
+/* Overlay Gelap */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* --- CSS STANDAR / DESKTOP --- */
+.hamburger-btn {
+  display: none; /* Tetap sembunyikan di desktop */
+}
+
+/* --- RESPONSIVE MOBILE VIEW --- */
+@media (max-width: 768px) {
+  .hamburger-btn {
+    display: block;
+    position: fixed;   /* Membuatnya melayang absolut di layar */
+    top: 1.5rem;       /* Sesuaikan biar lurus presisi di dalam area navbar */
+    right: 2rem;       /* Jarak dari kanan layar */
+    z-index: 1010;     /* Angka ini sekarang VALID menembus laci mobile (999) */
+    
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.3s ease;
+  }
+
+  /* Warna ikon saat laci aktif jika kamu ingin mengubah kontrasnya */
+  .hamburger-btn.active {
+    color: var(--navy); 
+  }
+
+  .nav-links {
+    display: none;
+  }
+}
+
+
+  /* ===== Floating music button ===== */
+  .music-fab {
+    position: fixed; right: 1.75rem; bottom: 1.75rem; z-index: 200;
+    width: 62px; height: 62px; border-radius: 50%;
+    background: var(--navy);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 10px 24px rgba(15, 30, 61, 0.35);
+    cursor: pointer; border: none;
+    opacity: 0; transform: scale(0.8); pointer-events: none;
+    transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.2s ease;
+  }
+  .music-fab.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
+  .music-fab:hover { box-shadow: 0 12px 28px rgba(15, 30, 61, 0.5); }
+  .music-fab:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  .music-fab .disc { transition: transform 0.2s ease; }
+  .music-fab.playing .disc { animation: spinDisc 2.6s linear infinite; }
+  @keyframes spinDisc { to { transform: rotate(360deg); } }
+
+  /* ===== Hero ===== */
+  .hero {
+    min-height: 90vh; display: grid; grid-template-columns: 1.4fr 0.6fr; align-items: end;
+    padding: 4rem 3rem 5rem; background: var(--navy); color: var(--cream);
+  }
+  .hero-eyebrow { color: var(--gold); font-size: 0.95rem; font-weight: 500; margin-bottom: 1.5rem; }
+  .hero-title { font-family: var(--serif); font-size: clamp(2.4rem, 5.5vw, 4.2rem); font-weight: 600; line-height: 1.08; max-width: 14ch; margin-bottom: 1.75rem; }
+  .hero-sub { max-width: 46ch; font-size: 1.05rem; color: rgba(247, 245, 240, 0.75); margin-bottom: 2.25rem; }
+  .hero-cta { display: inline-block; font-size: 0.95rem; font-weight: 600; border-bottom: 1px solid var(--gold); padding-bottom: 3px; color: var(--gold); }
+  .hero-number { text-align: right; }
+  .num-value { display: block; font-family: var(--serif); font-size: clamp(3rem, 8vw, 5.5rem); font-weight: 700; color: var(--gold); line-height: 1; }
+  .num-label { display: block; font-size: 0.85rem; color: rgba(247, 245, 240, 0.6); margin-top: 0.5rem; }
+
+  /* ===== Sections ===== */
+  .section { padding: 6rem 3rem; border-bottom: 1px solid var(--line); }
+  .section--dark { background: var(--navy-soft); color: var(--cream); border-bottom: none; }
+  .section--dark .section-head p { color: rgba(247, 245, 240, 0.65); }
+  .section--cream { background: #EFEBE1; }
+  .section-head { max-width: 640px; margin-bottom: 3.5rem; }
+  .section-head h2 { font-family: var(--serif); font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 600; margin-bottom: 0.75rem; color: inherit; }
+  .section-head p { color: rgba(26, 26, 26, 0.65); font-size: 1.05rem; }
+  .section--cork .section-head p { color: rgba(247, 245, 240, 0.7); }
+
+  /* ===== Corkboard (Struktur, Anggota, Galeri) ===== */
+  .section--cork {
+    background:
+      radial-gradient(circle at 20% 30%, rgba(0,0,0,0.08) 0, transparent 3%),
+      radial-gradient(circle at 70% 60%, rgba(0,0,0,0.08) 0, transparent 3%),
+      radial-gradient(circle at 40% 80%, rgba(0,0,0,0.06) 0, transparent 2.5%),
+      radial-gradient(circle at 85% 20%, rgba(0,0,0,0.07) 0, transparent 3%),
+      linear-gradient(155deg, var(--kraft), var(--kraft-dark));
+    color: var(--cream);
+  }
+
+  .board-wrap {
+    position: relative;
+  }
+
+  .string-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    overflow: visible;
+  }
+
+  .board-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem 2rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  .pinned {
+    position: relative;
+    background: var(--cream);
+    padding: 0.75rem 0.75rem 1rem;
+    box-shadow: 0 14px 26px rgba(0,0,0,0.3);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.3s ease, filter 0.3s ease;
+    cursor: pointer;
+  }
+
+  .pinned:nth-child(3n+1) { transform: rotate(-3deg); }
+  .pinned:nth-child(3n+2) { transform: rotate(2deg); }
+  .pinned:nth-child(3n)   { transform: rotate(-1.5deg); }
+  .pinned:nth-child(2n)   { transform: rotate(3.5deg); }
+
+  .pinned:hover, .pinned:focus-within {
+    transform: rotate(0deg) translateY(-6px) scale(1.03);
+    box-shadow: 0 20px 34px rgba(0,0,0,0.35);
+    z-index: 5;
+  }
+
+  .pinned::before {
+    content: '';
+    position: absolute;
+    top: -16px; left: 50%;
+    width: 74px; height: 30px;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.65);
+    transform: translateX(-50%) rotate(-4deg);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+  }
+
+  .pinned:nth-child(2n)::before { transform: translateX(-50%) rotate(5deg); }
+
+  /* pencarian: kartu cocok menonjol, kartu lain memudar */
+  .pinned.match {
+    transform: rotate(0deg) translateY(-6px) scale(1.06) !important;
+    box-shadow: 0 22px 38px rgba(0,0,0,0.4);
+    z-index: 6;
+  }
+  .pinned.dim {
+    opacity: 0.28;
+    filter: grayscale(0.5);
+    transform: scale(0.94) rotate(0deg) !important;
+  }
+
+  .photo-block {
+    aspect-ratio: 4/5;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--cream);
+    font-family: var(--serif);
+    font-size: 2.8rem;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .photo-block::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(155deg, rgba(255,255,255,0.12), rgba(0,0,0,0.25));
+  }
+
+  .avatar-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    position: relative;
+    display: block;
+  }
+
+  .p1 { background: var(--navy); }
+  .p2 { background: #5A4632; }
+  .p3 { background: #3E5C4F; }
+  .p4 { background: #6B4A57; }
+  .p5 { background: #3F4E6B; }
+  .p6 { background: #7A5A3A; }
+
+  .pin-caption {
+    padding-top: 0.75rem;
+    color: var(--ink);
+  }
+
+  .pin-role {
+    display: block;
+    font-family: var(--hand);
+    font-size: 1.35rem;
+    color: var(--kraft-dark);
+    line-height: 1;
+  }
+
+  .pin-name {
+    display: block;
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-top: 0.15rem;
+  }
+
+  .pin-fact {
+    display: none;
+    font-size: 0.85rem;
+    color: rgba(26,26,26,0.6);
+    margin-top: 0.4rem;
+    line-height: 1.4;
+  }
+
+  /* kartu non-zoomable (galeri) masih pakai buka/tutup inline */
+  .pinned.open .pin-fact { display: block; }
+  .pinned.open .pin-role,
+  .pinned.open .pin-name { opacity: 0.6; }
+
+  /* ===== Pencarian anggota ===== */
+  .member-search-wrap { margin-bottom: 2.5rem; }
+  .member-search {
+    width: 100%; max-width: 360px;
+    padding: 0.8rem 1.1rem;
+    font-size: 0.95rem;
+    background: rgba(247, 245, 240, 0.1);
+    border: 1px solid rgba(247, 245, 240, 0.35);
+    color: var(--cream);
+  }
+  .member-search::placeholder { color: rgba(247, 245, 240, 0.5); }
+  .member-search:focus { outline: none; border-color: var(--gold); background: rgba(247, 245, 240, 0.16); }
+
+  .member-more-wrap { margin-top: 3.5rem; text-align: center; }
+  .more-btn {
+    background: none; border: 1px solid var(--gold); color: var(--gold);
+    padding: 0.75rem 1.75rem; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s ease, color 0.2s ease;
+  }
+  .more-btn:hover { background: var(--gold); color: var(--navy); }
+  .more-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+  /* ===== Zoom overlay ===== */
+  .zoom-overlay {
+    position: fixed; inset: 0; z-index: 800;
+    background: rgba(15, 30, 61, 0.92);
+    display: flex; align-items: center; justify-content: center;
+    padding: 2rem;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .zoom-overlay.active { opacity: 1; pointer-events: auto; }
+  .zoom-card {
+    background: var(--cream);
+    width: 100%; max-width: 380px;
+    padding: 1rem 1rem 1.5rem;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+    transform: scale(0.92);
+    transition: transform 0.3s ease;
+  }
+  .zoom-overlay.active .zoom-card { transform: scale(1); }
+  .zoom-photo { aspect-ratio: 4/5; overflow: hidden; background: var(--navy); }
+  .zoom-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .zoom-info { padding-top: 1rem; }
+  .zoom-info .pin-fact { display: block; }
+  .zoom-close {
+    position: absolute; top: 1.5rem; right: 1.75rem;
+    background: none; border: none; color: var(--gold);
+    font-size: 1.4rem; line-height: 1; cursor: pointer; padding: 0.5rem;
+  }
+  .zoom-close:hover { color: var(--cream); }
+  .zoom-close:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+  /* ===== Timeline ===== */
+  .timeline { display: flex; flex-direction: column; max-width: 760px; }
+  .timeline-item { display: grid; grid-template-columns: 100px 1fr; gap: 2rem; padding: 1.75rem 0; border-top: 1px solid rgba(247, 245, 240, 0.15); }
+  .timeline-item:last-child { border-bottom: 1px solid rgba(247, 245, 240, 0.15); }
+  .timeline-year { font-family: var(--serif); font-size: 1.4rem; font-weight: 600; color: var(--gold); }
+  .timeline-item p { color: rgba(247, 245, 240, 0.8); align-self: center; }
+
+  /* ===== Quote ===== */
+  .quote-block { max-width: 700px; }
+  .quote-text { font-family: var(--serif); font-size: clamp(1.4rem, 2.6vw, 2rem); font-weight: 500; line-height: 1.4; margin-bottom: 1.25rem; }
+  .quote-attr { font-size: 0.9rem; color: rgba(26, 26, 26, 0.6); }
+
+  /* ===== Footer ===== */
+  .footer { padding: 2.5rem 3rem; text-align: center; background: var(--navy); color: rgba(247, 245, 240, 0.6); font-size: 0.85rem; }
+
+  /* ===== Reveal on scroll ===== */
+  .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 900px) {
+    .nav { padding: 0 0.5rem; }
+    .nav-links { display: none; }
+    .hero { grid-template-columns: 1fr; padding: 3rem 1.5rem 3.5rem; gap: 2.5rem; }
+    .hero-number { text-align: left; }
+    .section { padding: 4rem 1.5rem; }
+    .board-grid { grid-template-columns: 1fr 1fr; gap: 2.5rem 1.25rem; }
+    .music-fab { right: 1.25rem; bottom: 1.25rem; width: 54px; height: 54px; }
+  }
+
+  @media (max-width: 560px) {
+    .board-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gate-mark, .gate-ring, .music-fab.playing .disc { animation: none; }
+    .reveal { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body class="locked">
+
+<div class="gate" id="gate">
+  <div class="gate-ring"></div>
+  <div class="gate-mark">AP</div>
+  <p class="gate-sub">Ketuk di mana saja untuk membuka</p>
+</div>
+
+
+<nav class="nav">
+  <img src="logo-ap-2.png" alt="logo" class="nav-mark">
+  
+  <!-- Menu Utama Desktop -->
+  <ul class="nav-links">
+    <li><a href="#kelembagaan"><i class="fas fa-sitemap" style="margin-right: 8px;"></i>Struktur</a></li>
+    <li><a href="#anggota"><i class="fas fa-users" style="margin-right: 8px;"></i>Anggota</a></li>
+    <li><a href="#arsip"><i class="fas fa-archive" style="margin-right: 8px;"></i>Arsip</a></li>
+    <li><a href="#galeri"><i class="fas fa-images" style="margin-right: 8px;"></i>Galeri</a></li>
+    <li><a href="#cerita"><i class="fas fa-book-open" style="margin-right: 8px;"></i>Cerita Kami</a></li>
+  </ul>
+</nav>
+
+<!-- 🛠️ PINDAHKAN TOMBOL KE SINI (DI LUAR NAV) 🛠️ -->
+<button class="hamburger-btn" id="menu-toggle">
+  <i class="fas fa-bars" id="menu-icon"></i>
+</button>
+
+<!-- Laci Mobile -->
+<div class="nav-mobile-wrapper" id="nav-mobile-menu">
+  <ul class="mobile-links">
+    <li><a href="#kelembagaan"><i class="fas fa-sitemap" style="margin-right: 8px;"></i>Struktur</a></li>
+    <li><a href="#anggota"><i class="fas fa-users" style="margin-right: 8px;"></i>Anggota</a></li>
+    <li><a href="#arsip"><i class="fas fa-archive" style="margin-right: 8px;"></i>Arsip</a></li>
+    <li><a href="#galeri"><i class="fas fa-images" style="margin-right: 8px;"></i>Galeri</a></li>
+    <li><a href="#cerita"><i class="fas fa-book-open" style="margin-right: 8px;"></i>Cerita Kami</a></li>
+  </ul>
+</div>
+
+<!-- Overlay Gelap (Cukup pasang satu saja di paling bawah) -->
+<div class="overlay" id="menu-overlay"></div>
+
+<!-- Taruh elemen overlay ini di bagian bawah, sebelum penutup tag </body> -->
+<div class="overlay" id="menu-overlay"></div>
+<button class="music-fab" id="musicFab" aria-pressed="true" aria-label="Aktifkan atau matikan musik suasana">
+  <svg class="disc" width="30" height="30" viewBox="0 0 30 30" fill="none">
+    <circle cx="15" cy="15" r="13" fill="#1A1A1A" stroke="#C9A961" stroke-width="1"/>
+    <circle cx="15" cy="15" r="9" fill="none" stroke="#C9A961" stroke-width="0.5" opacity="0.5"/>
+    <circle cx="15" cy="15" r="6" fill="none" stroke="#C9A961" stroke-width="0.5" opacity="0.5"/>
+    <circle cx="15" cy="15" r="2.4" fill="#C9A961"/>
+  </svg>
+</button>
+
+<header class="hero">
+  <div class="hero-inner">
+    <p class="hero-eyebrow">Program Studi Administrasi Pendidikan</p>
+    <h1 class="hero-title">Kami mengelola<br>apa yang orang lain<br>lupa dikelola.</h1>
+    <p class="hero-sub">Ini bukan sekadar kelas. Ini unit kerja kecil yang belajar bagaimana pendidikan berjalan dari belakang layar — dan kami merayakannya di sini.</p>
+    <a href="#kelembagaan" class="hero-cta">Lihat struktur kami ↓</a>
+  </div>
+  <div class="hero-number">
+    <span class="num-value" data-target="0">0</span>
+    <span class="num-label">anggota aktif</span>
+  </div>
+</header>
+
+<main>
+
+  <section class="section section--cork" id="kelembagaan">
+    <div class="section-head">
+      <h2>Struktur Kelembagaan</h2>
+      <p>Ditempel apa adanya, seperti mading kelas sungguhan. Klik foto untuk kenal lebih dekat.</p>
+    </div>
+    <div class="board-wrap" id="orgBoardWrap">
+      <svg class="string-svg" id="stringSvg"></svg>
+      <div class="board-grid" id="orgBoardGrid">
+        <!-- diisi otomatis dari Supabase (tabel org_members, category='pengurus') -->
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--cork" id="anggota">
+    <div class="section-head">
+      <h2>Anggota Kelas</h2>
+      <p>Satu papan yang sama untuk semua. Ketik nama untuk cari orangnya, atau buka satu per satu.</p>
+    </div>
+    <div class="member-search-wrap">
+      <input type="text" id="memberSearch" class="member-search" placeholder="Cari nama anggota…" autocomplete="off">
+    </div>
+    <div class="board-grid" id="memberGrid"></div>
+    <div class="member-more-wrap">
+      <button class="more-btn" id="moreBtn" type="button" style="display:none;">Lihat anggota lainnya</button>
+    </div>
+  </section>
+
+  <section class="section section--dark" id="arsip">
+    <div class="section-head">
+      <h2>Arsip Perjalanan</h2>
+      <p>Dari mahasiswa baru sampai hari ini — dicatat, bukan dilupakan.</p>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item"><span class="timeline-year">2023</span><p>Angkatan resmi terbentuk, orientasi pertama sebagai satu kelas AP.</p></div>
+      <div class="timeline-item"><span class="timeline-year">2024</span><p>Kegiatan lapangan pertama — observasi tata kelola sekolah mitra.</p></div>
+      <div class="timeline-item"><span class="timeline-year">2025</span><p>Proyek kolaborasi antar-divisi, konsolidasi identitas kelas.</p></div>
+      <div class="timeline-item"><span class="timeline-year">2026</span><p>Website ini lahir — etalase digital resmi kelas.</p></div>
+    </div>
+  </section>
+
+  <section class="section section--cork" id="galeri">
+    <div class="section-head">
+      <h2>Sorotan Kegiatan</h2>
+      <p>Klik tiap foto untuk baca ceritanya.</p>
+    </div>
+    <div class="board-grid" id="galeriGrid">
+      <!-- diisi otomatis dari Supabase (tabel activities) -->
+    </div>
+  </section>
+
+  <section class="section section--cream" id="cerita">
+    <div class="section-head">
+      <h2>Cerita Kami</h2>
+      <p>Yang tidak masuk laporan resmi, tapi paling diingat.</p>
+    </div>
+    <div class="quote-block">
+      <p class="quote-text">"Belum pernah ada kelas yang benar-benar merasa seperti unit kerja, sampai kami membangun ini sendiri."</p>
+      <span class="quote-attr">— Anggota Kelas AP</span>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>Administrasi Pendidikan — dikelola oleh yang paham cara mengelola.</p>
+</footer>
+
+<div class="zoom-overlay" id="zoomOverlay">
+  <button class="zoom-close" id="zoomClose" type="button" aria-label="Tutup">✕</button>
+  <div class="zoom-card">
+    <div class="zoom-photo">
+      <img id="zoomImg" src="" alt="">
+    </div>
+    <div class="zoom-info">
+      <span class="pin-role" id="zoomRole"></span>
+      <span class="pin-name" id="zoomName" style="font-size:1.5rem;"></span>
+      <p class="pin-fact" id="zoomFact"></p>
+    </div>
+  </div>
+</div>
+
+<audio id="ambientAudio" loop preload="none">
+  <source src="lagu-sekolah.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+  // =====================================================================
+  // GANTI DUA BARIS INI dengan URL & anon key dari project Supabase lo
+  // (sama persis dengan yang dipakai di admin.html)
+  // =====================================================================
+  const SUPABASE_URL = "https://eeurncjtbbelvpekdiaf.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldXJuY2p0YmJlbHZwZWtkaWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1ODk3OTAsImV4cCI6MjEwNDE2NTc5MH0.Rqeti1o06LEZhxjkJVc4E8sawDqQvOvWJ9nw6ck1dWQ";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const cardColors = ['0f1e3d', '5a4632', '3e5c4f', '6b4a57', '3f4e6b', '7a5a3a'];
+  const cardBgClasses = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
+  function fallbackAvatar(name, hex) {
+    return `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(name)}&backgroundColor=${hex || '0f1e3d'}`;
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+  const menuToggle = document.getElementById('menu-toggle');
+  const menuIcon = document.getElementById('menu-icon');
+  const navMobile = document.getElementById('nav-mobile-menu'); // Target ke wrapper terisolasi
+  const menuOverlay = document.getElementById('menu-overlay');
+
+  function toggleMenu() {
+    if (!navMobile || !menuOverlay) return;
+
+    navMobile.classList.toggle('active');
+    menuOverlay.classList.toggle('active');
+
+    if (navMobile.classList.contains('active')) {
+      if (menuIcon) {
+        menuIcon.classList.remove('fa-bars');
+        menuIcon.classList.add('fa-times');
+      }
+      document.body.style.overflow = 'hidden'; 
+    } else {
+      if (menuIcon) {
+        menuIcon.classList.remove('fa-times');
+        menuIcon.classList.add('fa-bars');
+      }
+      document.body.style.overflow = 'auto'; 
+    }
+  }
+
+  if (menuToggle) menuToggle.addEventListener('click', toggleMenu);
+  if (menuOverlay) menuOverlay.addEventListener('click', toggleMenu);
+
+  // Otomatis menutup menu kalau link di dalam laci diklik
+  const mobileLinks = document.querySelectorAll('.mobile-links a');
+  mobileLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      if (navMobile && navMobile.classList.contains('active')) {
+        toggleMenu();
+      }
+    });
+  });
+});
+
+ 
+  const gate = document.getElementById('gate');
+  const ambientAudio = document.getElementById('ambientAudio');
+  const musicFab = document.getElementById('musicFab');
+  let isPlaying = false;
+
+  function setPlayingState(state) {
+    isPlaying = state;
+    musicFab.classList.toggle('playing', state);
+    musicFab.setAttribute('aria-pressed', String(state));
+  }
+
+  function openGate() {
+    document.body.classList.remove('locked');
+    gate.classList.add('hidden');
+    musicFab.classList.add('visible');
+
+    ambientAudio.volume = 0.25;
+    ambientAudio.play().then(() => setPlayingState(true)).catch(() => setPlayingState(false));
+
+    setTimeout(() => animateNumber(numValue), 400);
+    setTimeout(() => { if (typeof scheduleDrawStrings === 'function') scheduleDrawStrings(); }, 450);
+    gate.removeEventListener('click', openGate);
+  }
+
+  gate.addEventListener('click', openGate);
+
+  musicFab.addEventListener('click', () => {
+    if (isPlaying) {
+      ambientAudio.pause();
+      setPlayingState(false);
+    } else {
+      ambientAudio.play().then(() => setPlayingState(true)).catch(() => setPlayingState(false));
+    }
+  });
+
+  // Musik berhenti kalau tab disembunyikan / halaman ditinggal.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && isPlaying) {
+      ambientAudio.pause();
+      setPlayingState(false);
+    }
+  });
+
+  window.addEventListener('pagehide', () => {
+    ambientAudio.pause();
+  });
+
+  const numValue = document.querySelector('.num-value');
+  function animateNumber(el) {
+    const target = parseInt(el.dataset.target, 10) || 0;
+    const duration = 1400;
+    const start = performance.now();
+    function tick(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(eased * target);
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // ===== Zoom foto: struktur kelembagaan + anggota kelas =====
+  const zoomOverlay = document.getElementById('zoomOverlay');
+  const zoomImg = document.getElementById('zoomImg');
+  const zoomRole = document.getElementById('zoomRole');
+  const zoomName = document.getElementById('zoomName');
+  const zoomFact = document.getElementById('zoomFact');
+  const zoomClose = document.getElementById('zoomClose');
+
+  function openZoom(card) {
+    const img = card.querySelector('.avatar-img');
+    const role = card.querySelector('.pin-role')?.textContent || '';
+    const name = card.querySelector('.pin-name')?.textContent || '';
+    const fact = card.querySelector('.pin-fact')?.textContent.trim() || '';
+    zoomImg.src = img ? img.src : '';
+    zoomImg.alt = 'Foto ' + name;
+    zoomRole.textContent = role;
+    zoomName.textContent = name;
+    zoomFact.textContent = fact;
+    zoomOverlay.classList.add('active');
+    document.body.classList.add('no-scroll');
+  }
+
+  function closeZoom() {
+    zoomOverlay.classList.remove('active');
+    document.body.classList.remove('no-scroll');
+  }
+
+  function bindZoomable(card) {
+    card.addEventListener('click', () => openZoom(card));
+    card.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') openZoom(card);
+    });
+  }
+
+  zoomClose.addEventListener('click', closeZoom);
+  zoomOverlay.addEventListener('click', (e) => {
+    if (e.target === zoomOverlay) closeZoom();
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && zoomOverlay.classList.contains('active')) closeZoom();
+  });
+
+  // ===== Benang merah penghubung: kepala kelas ke tiap divisi =====
+  const stringSvg = document.getElementById('stringSvg');
+  const orgBoardWrap = document.getElementById('orgBoardWrap');
+  const orgBoardGrid = document.getElementById('orgBoardGrid');
+
+  function pinPoint(el, wrapRect) {
+    const r = el.getBoundingClientRect();
+    return {
+      x: r.left - wrapRect.left + r.width / 2,
+      y: r.top - wrapRect.top + 6
+    };
+  }
+
+  function drawStrings() {
+    if (!stringSvg || !orgBoardWrap) return;
+    stringSvg.innerHTML = '';
+
+    const cards = Array.from(orgBoardGrid.querySelectorAll('.pinned'));
+    const lead = orgBoardGrid.querySelector('.pinned--lead');
+    if (!lead || cards.length < 2) return;
+
+    const wrapRect = orgBoardWrap.getBoundingClientRect();
+    const leadPoint = pinPoint(lead, wrapRect);
+
+    cards.forEach((card) => {
+      if (card === lead) return;
+      const point = pinPoint(card, wrapRect);
+      const midX = (leadPoint.x + point.x) / 2;
+      const sag = 22;
+      const midY = Math.max(leadPoint.y, point.y) + sag;
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', `M ${leadPoint.x} ${leadPoint.y} Q ${midX} ${midY} ${point.x} ${point.y}`);
+      path.setAttribute('stroke', '#B23A2E');
+      path.setAttribute('stroke-width', '1.5');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('opacity', '0.75');
+      stringSvg.appendChild(path);
+    });
+
+    cards.forEach((card) => {
+      const point = pinPoint(card, wrapRect);
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', point.x);
+      dot.setAttribute('cy', point.y);
+      dot.setAttribute('r', '3.5');
+      dot.setAttribute('fill', '#B23A2E');
+      stringSvg.appendChild(dot);
+    });
+  }
+
+  let stringRedrawTimeout;
+  function scheduleDrawStrings() {
+    clearTimeout(stringRedrawTimeout);
+    stringRedrawTimeout = setTimeout(drawStrings, 120);
+  }
+  window.addEventListener('resize', scheduleDrawStrings);
+  window.addEventListener('load', scheduleDrawStrings);
+
+  // =====================================================================
+  // STRUKTUR KELEMBAGAAN — dari tabel org_members, category = 'pengurus'
+  // =====================================================================
+  async function renderPengurus() {
+    const { data, error } = await sb.from('org_members').select('*').eq('category', 'pengurus').order('order_index');
+    if (error || !data) return;
+    orgBoardGrid.innerHTML = data.map((m, i) => `
+      <div class="pinned zoomable ${m.is_lead ? 'pinned--lead' : ''}" tabindex="0">
+        <div class="photo-block ${cardBgClasses[i % 6]}">
+          <img class="avatar-img" src="${m.photo_url || fallbackAvatar(m.name, cardColors[i % 6])}" alt="Avatar ${m.name}" loading="lazy">
+        </div>
+        <div class="pin-caption">
+          <span class="pin-role">${m.role || ''}</span>
+          <span class="pin-name">${m.name}</span>
+          <p class="pin-fact">${m.fact || ''}</p>
+        </div>
+      </div>`).join('');
+    orgBoardGrid.querySelectorAll('.zoomable').forEach(bindZoomable);
+    scheduleDrawStrings();
+  }
+  
+  
+
+  // =====================================================================
+  // ANGGOTA KELAS — dari tabel org_members, category = 'anggota'
+  // Dipaginasi (bukan render semua sekaligus) + pencarian langsung query DB
+  // (ini yang benerin lag lama, karena request foto cuma untuk yang tampil)
+  // =====================================================================
+  const memberGrid = document.getElementById('memberGrid');
+  const moreBtn = document.getElementById('moreBtn');
+  const memberSearch = document.getElementById('memberSearch');
+
+  const INITIAL_COUNT = 6;
+  const STEP_COUNT = 6;
+  let loadedCount = 0;
+  let memberTotal = 0;
+  let colorCounter = 0;
+  let searchMode = false;
+  let searchDebounce;
+
+  function memberCardHTML(m) {
+    const i = colorCounter++;
+    return `
+      <div class="pinned zoomable" tabindex="0">
+        <div class="photo-block ${cardBgClasses[i % 6]}">
+          <img class="avatar-img" src="${m.photo_url || fallbackAvatar(m.name, cardColors[i % 6])}" alt="Avatar ${m.name}" loading="lazy">
+        </div>
+        <div class="pin-caption">
+          <span class="pin-role">${m.role || ''}</span>
+          <span class="pin-name">${m.name}</span>
+          <p class="pin-fact">${m.fact || ''}</p>
+        </div>
+      </div>`;
+  }
+
+  function appendMemberCards(list) {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = list.map(memberCardHTML).join('');
+    Array.from(wrapper.children).forEach(card => {
+      bindZoomable(card);
+      memberGrid.appendChild(card);
+    });
+  }
+
+  function updateMoreBtn() {
+    const remaining = memberTotal - loadedCount;
+    if (searchMode || remaining <= 0) {
+      moreBtn.style.display = 'none';
+    } else {
+      moreBtn.style.display = 'inline-block';
+      moreBtn.textContent = `Lihat anggota lainnya (${remaining} tersisa)`;
+    }
+  }
+
+  async function loadMoreAnggota(n) {
+    const { data, error } = await sb.from('org_members').select('*').eq('category', 'anggota')
+      .order('order_index').range(loadedCount, loadedCount + n - 1);
+    if (error || !data) return;
+    appendMemberCards(data);
+    loadedCount += data.length;
+    updateMoreBtn();
+  }
+
+  async function renderAnggotaInitial() {
+    const { count } = await sb.from('org_members').select('*', { count: 'exact', head: true }).eq('category', 'anggota');
+    memberTotal = count || 0;
+    loadedCount = 0;
+    colorCounter = 0;
+    memberGrid.innerHTML = '';
+    await loadMoreAnggota(INITIAL_COUNT);
+  }
+
+  async function runMemberSearch(q) {
+    if (!q) {
+      searchMode = false;
+      await renderAnggotaInitial();
+      return;
+    }
+    searchMode = true;
+    colorCounter = 0;
+    const { data, error } = await sb.from('org_members').select('*').eq('category', 'anggota')
+      .ilike('name', `%${q}%`).order('order_index');
+    memberGrid.innerHTML = '';
+    if (!error && data) appendMemberCards(data);
+    updateMoreBtn();
+  }
+
+  moreBtn.addEventListener('click', () => loadMoreAnggota(STEP_COUNT));
+  memberSearch.addEventListener('input', () => {
+    clearTimeout(searchDebounce);
+    const q = memberSearch.value.trim();
+    searchDebounce = setTimeout(() => runMemberSearch(q), 250);
+  });
+
+  // =====================================================================
+  // KEGIATAN / GALERI — dari tabel activities
+  // =====================================================================
+  async function renderKegiatan() {
+    const grid = document.getElementById('galeriGrid');
+    const { data, error } = await sb.from('activities').select('*').order('order_index');
+    if (error || !data) return;
+    grid.innerHTML = data.map((a, i) => `
+      <div class="pinned" tabindex="0">
+        <div class="photo-block ${cardBgClasses[i % 6]}">
+          ${a.photo_url ? `<img class="avatar-img" src="${a.photo_url}" alt="${a.title}" loading="lazy">` : '📍'}
+        </div>
+        <div class="pin-caption">
+          <span class="pin-role">${a.year || ''}</span>
+          <span class="pin-name">${a.title}</span>
+          <p class="pin-fact">${a.description || ''}</p>
+        </div>
+      </div>`).join('');
+    grid.querySelectorAll('.pinned').forEach(card => {
+      card.addEventListener('click', () => card.classList.toggle('open'));
+      card.addEventListener('keypress', (e) => { if (e.key === 'Enter') card.classList.toggle('open'); });
+    });
+  }
+
+  // =====================================================================
+  // Hitung total anggota aktif buat angka di hero
+  // =====================================================================
+  async function initHeroCount() {
+    const { count } = await sb.from('org_members').select('*', { count: 'exact', head: true });
+    numValue.dataset.target = count || 0;
+  }
+
+  // ===== Jalankan semua =====
+  initHeroCount();
+  renderPengurus();
+  renderAnggotaInitial();
+  renderKegiatan();
+
+  const revealTargets = document.querySelectorAll('.timeline-item, .quote-block');
+  revealTargets.forEach((el) => el.classList.add('reveal'));
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  revealTargets.forEach((el) => observer.observe(el));
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    revealTargets.forEach((el) => el.classList.add('is-visible'));
+  }
+  
+  
+  
+</script>
+
+</body>
+</html>
