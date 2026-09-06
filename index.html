@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</script>
 <link rel="icon" type="image/png" href="logo-AP2.png">
 <title>AP — Administrasi Pendidikan</title>
 
@@ -11,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="preconnect" href="https://api.dicebear.com" />
+<link rel="preconnect" href="https://eeurncjtbbelvpekdiaf.supabase.co" />
 
 <!-- FONT: cuma Fraunces + Caveat + Inter (Playfair dihapus, gak pernah dipakai) -->
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Caveat:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -55,7 +55,6 @@
     cursor: pointer;
     transition: opacity 0.9s ease, visibility 0.9s ease;
   }
-  /* Animasi dimatiin total pas gate udah ketutup, biar gak nyala terus di background */
   .gate.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
   .gate.hidden, .gate.hidden .gate-mark, .gate.hidden .gate-ring { animation: none; }
 
@@ -65,7 +64,6 @@
   .gate-ring { position: absolute; width: 220px; height: 220px; border: 1px solid rgba(201, 169, 97, 0.3); border-radius: 50%; animation: ringGrow 3s ease-in-out infinite; }
   @keyframes ringGrow { 0% { transform: scale(0.8); opacity: 0.6; } 100% { transform: scale(1.6); opacity: 0; } }
 
-  /* --- NAVBAR (tanpa backdrop-filter, ganti opacity biar ringan) --- */
   .nav {
     position: sticky;
     top: 0;
@@ -136,20 +134,18 @@
   }
   .overlay.active { opacity: 1; pointer-events: auto; }
 
-  /* --- RESPONSIVE MOBILE VIEW --- */
   @media (max-width: 768px) {
     .hamburger-btn {
       display: block;
       position: fixed;
       top: 1.5rem;
       right: 2rem;
-      z-index: 1010; /* tetap di atas laci menu (1000) */
+      z-index: 1010;
     }
     .hamburger-btn.active { color: var(--navy); }
     .nav-links { display: none; }
   }
 
-  /* ===== Floating music button ===== */
   .music-fab {
     position: fixed; right: 1.75rem; bottom: 1.75rem; z-index: 200;
     width: 62px; height: 62px; border-radius: 50%;
@@ -167,7 +163,6 @@
   .music-fab.playing .disc { animation: spinDisc 2.6s linear infinite; }
   @keyframes spinDisc { to { transform: rotate(360deg); } }
 
-  /* ===== Hero ===== */
   .hero {
     min-height: 90vh; display: grid; grid-template-columns: 1.4fr 0.6fr; align-items: end;
     padding: 4rem 3rem 5rem; background: var(--navy); color: var(--cream);
@@ -180,7 +175,6 @@
   .num-value { display: block; font-family: var(--serif); font-size: clamp(3rem, 8vw, 5.5rem); font-weight: 700; color: var(--gold); line-height: 1; }
   .num-label { display: block; font-size: 0.85rem; color: rgba(247, 245, 240, 0.6); margin-top: 0.5rem; }
 
-  /* ===== Sections ===== */
   .section { padding: 6rem 3rem; border-bottom: 1px solid var(--line); }
   .section--dark { background: var(--navy-soft); color: var(--cream); border-bottom: none; }
   .section--dark .section-head p { color: rgba(247, 245, 240, 0.65); }
@@ -190,7 +184,6 @@
   .section-head p { color: rgba(26, 26, 26, 0.65); font-size: 1.05rem; }
   .section--cork .section-head p { color: rgba(247, 245, 240, 0.7); }
 
-  /* ===== Corkboard ===== */
   .section--cork {
     background:
       radial-gradient(circle at 20% 30%, rgba(0,0,0,0.08) 0, transparent 3%),
@@ -233,8 +226,6 @@
   .pinned:nth-child(3n)   { transform: rotate(-1.5deg); }
   .pinned:nth-child(2n)   { transform: rotate(3.5deg); }
 
-  /* Shadow "angkat" dipindah ke pseudo-element yang cuma di-toggle opacity-nya (murah di GPU),
-     bukan animasi box-shadow langsung (mahal, trigger repaint tiap kartu) */
   .pinned::after {
     content: '';
     position: absolute; inset: -4px;
@@ -290,7 +281,14 @@
     background: linear-gradient(155deg, rgba(255,255,255,0.12), rgba(0,0,0,0.25));
   }
 
-  .avatar-img { width: 100%; height: 100%; object-fit: cover; position: relative; display: block; }
+  .avatar-img {
+    width: 100%; height: 100%; object-fit: cover; position: relative; display: block;
+    opacity: 0; transition: opacity 0.45s ease;
+  }
+  .avatar-img.is-loaded { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) {
+    .avatar-img { transition: none; opacity: 1; }
+  }
 
   .p1 { background: var(--navy); }
   .p2 { background: #5A4632; }
@@ -307,7 +305,6 @@
   .pinned.open .pin-fact { display: block; }
   .pinned.open .pin-role, .pinned.open .pin-name { opacity: 0.6; }
 
-  /* ===== Pencarian anggota ===== */
   .member-search-wrap { margin-bottom: 2.5rem; }
   .member-search {
     width: 100%; max-width: 360px;
@@ -329,7 +326,6 @@
   .more-btn:hover { background: var(--gold); color: var(--navy); }
   .more-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 
-  /* ===== Zoom overlay ===== */
   .zoom-overlay {
     position: fixed; inset: 0; z-index: 800;
     background: rgba(15, 30, 61, 0.92);
@@ -360,26 +356,70 @@
   .zoom-close:hover { color: var(--cream); }
   .zoom-close:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 
-  /* ===== Timeline ===== */
   .timeline { display: flex; flex-direction: column; max-width: 760px; }
   .timeline-item { display: grid; grid-template-columns: 100px 1fr; gap: 2rem; padding: 1.75rem 0; border-top: 1px solid rgba(247, 245, 240, 0.15); }
   .timeline-item:last-child { border-bottom: 1px solid rgba(247, 245, 240, 0.15); }
   .timeline-year { font-family: var(--serif); font-size: 1.4rem; font-weight: 600; color: var(--gold); }
   .timeline-item p { color: rgba(247, 245, 240, 0.8); align-self: center; }
 
-  /* ===== Quote ===== */
   .quote-block { max-width: 700px; }
   .quote-text { font-family: var(--serif); font-size: clamp(1.4rem, 2.6vw, 2rem); font-weight: 500; line-height: 1.4; margin-bottom: 1.25rem; }
   .quote-attr { font-size: 0.9rem; color: rgba(26, 26, 26, 0.6); }
 
-  /* ===== Footer ===== */
+  /* ===== Tentang AP (kenapa orang luar harus peduli) ===== */
+  .about-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 3rem; align-items: start; max-width: 980px; }
+  .about-text { font-size: 1.02rem; line-height: 1.7; color: rgba(26,26,26,0.75); }
+  .about-stats { display: flex; flex-direction: column; gap: 1.5rem; border-left: 2px solid var(--gold); padding-left: 1.75rem; }
+  .about-stat-value { display: block; font-family: var(--serif); font-size: 2.4rem; font-weight: 700; color: var(--navy); line-height: 1; }
+  .about-stat-label { display: block; font-size: 0.85rem; color: rgba(26,26,26,0.55); margin-top: 0.3rem; }
+  @media (max-width: 700px) {
+    .about-grid { grid-template-columns: 1fr; }
+    .about-stats { flex-direction: row; flex-wrap: wrap; border-left: none; border-top: 2px solid var(--gold); padding-left: 0; padding-top: 1.25rem; gap: 1.75rem; }
+  }
+
+  /* ===== Pesan & Kesan (buku tamu) ===== */
+  .guestbook-wrap { margin-top: 3.5rem; max-width: 700px; }
+  .guestbook-form { display: flex; flex-direction: column; gap: 0.9rem; margin-bottom: 2.5rem; }
+  .guestbook-form input, .guestbook-form textarea {
+    font-family: inherit; font-size: 0.95rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+  }
+  .guestbook-form input:focus, .guestbook-form textarea:focus {
+    outline: none; border-color: var(--kraft-dark);
+  }
+  .guestbook-form textarea { resize: vertical; min-height: 90px; }
+  .guestbook-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+  .guestbook-submit {
+    align-self: flex-start;
+    background: var(--navy); color: var(--cream);
+    border: none; padding: 0.75rem 1.75rem;
+    font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .guestbook-submit:hover:not(:disabled) { background: var(--navy-soft); }
+  .guestbook-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+  .guestbook-status { font-size: 0.85rem; margin-top: -0.4rem; }
+  .guestbook-status.ok { color: #3E5C4F; }
+  .guestbook-status.err { color: #B23A2E; }
+  .guestbook-list { display: flex; flex-direction: column; gap: 1.1rem; }
+  .guestbook-note {
+    background: #fff; border-left: 3px solid var(--kraft-dark);
+    padding: 1rem 1.2rem;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+  }
+  .guestbook-note-name { font-family: var(--serif); font-weight: 600; font-size: 1rem; }
+  .guestbook-note-time { font-size: 0.75rem; color: rgba(26,26,26,0.4); margin-left: 0.5rem; font-weight: 400; font-family: var(--sans); }
+  .guestbook-note-msg { font-size: 0.92rem; color: rgba(26,26,26,0.75); margin-top: 0.35rem; line-height: 1.5; }
+  .guestbook-empty { font-size: 0.9rem; color: rgba(26,26,26,0.5); }
+
   .footer { padding: 2.5rem 3rem; text-align: center; background: var(--navy); color: rgba(247, 245, 240, 0.6); font-size: 0.85rem; }
 
-  /* ===== Reveal on scroll ===== */
   .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.7s ease, transform 0.7s ease; }
   .reveal.is-visible { opacity: 1; transform: translateY(0); }
 
-  /* ===== Responsive ===== */
   @media (max-width: 900px) {
     .nav { padding: 0 0.5rem; }
     .nav-links { display: none; }
@@ -409,12 +449,14 @@
 </div>
 
 <nav class="nav">
-  <img src="logo-ap-2.png" alt="logo" class="nav-mark">
+  <img src="logo-ap-2.png" alt="logo" class="nav-mark" width="80" height="80">
 
   <ul class="nav-links">
+    <li><a href="#tentang"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>Tentang</a></li>
     <li><a href="#kelembagaan"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><circle cx="12" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M12 7v4M12 11 6 17M12 11l6 6"/></svg>Struktur</a></li>
     <li><a href="#anggota"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Anggota</a></li>
     <li><a href="#arsip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><rect x="2" y="4" width="20" height="5" rx="1"/><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M10 13h4"/></svg>Arsip</a></li>
+    <li><a href="#prestasi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><path d="M12 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/><path d="M8.5 14.5 7 22l5-3 5 3-1.5-7.5"/></svg>Prestasi</a></li>
     <li><a href="#galeri"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Galeri</a></li>
     <li><a href="#cerita"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><path d="M2 4h7a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-7a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h8z"/></svg>Cerita Kami</a></li>
   </ul>
@@ -427,9 +469,11 @@
 
 <div class="nav-mobile-wrapper" id="nav-mobile-menu">
   <ul class="mobile-links">
+    <li><a href="#tentang"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>Tentang</a></li>
     <li><a href="#kelembagaan"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><circle cx="12" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M12 7v4M12 11 6 17M12 11l6 6"/></svg>Struktur</a></li>
     <li><a href="#anggota"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Anggota</a></li>
     <li><a href="#arsip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><rect x="2" y="4" width="20" height="5" rx="1"/><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M10 13h4"/></svg>Arsip</a></li>
+    <li><a href="#prestasi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><path d="M12 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/><path d="M8.5 14.5 7 22l5-3 5 3-1.5-7.5"/></svg>Prestasi</a></li>
     <li><a href="#galeri"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Galeri</a></li>
     <li><a href="#cerita"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><path d="M2 4h7a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-7a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h8z"/></svg>Cerita Kami</a></li>
   </ul>
@@ -461,6 +505,37 @@
 
 <main>
 
+  <section class="section section--cream" id="tentang">
+    <div class="section-head">
+      <h2>Kenapa Administrasi Pendidikan?</h2>
+      <p>Bukan jurusan di balik layar yang sepi peran — ini yang bikin pendidikan tetap jalan rapi.</p>
+    </div>
+    <div class="about-grid">
+      <p class="about-text">
+        Administrasi Pendidikan mengurus hal-hal yang sering luput dari sorotan: tata kelola sekolah,
+        manajemen sumber daya pendidikan, perencanaan kebijakan, sampai memastikan proses belajar-mengajar
+        berjalan tanpa hambatan administratif. Lulusannya bisa jadi tenaga kependidikan, pengelola lembaga
+        pendidikan, konsultan kebijakan pendidikan, hingga pengambil keputusan di dinas pendidikan.
+        Kelas ini membangun situs ini sendiri sebagai bukti kecil dari apa yang kami pelajari — mengelola
+        sesuatu dengan rapi, dari nol.
+      </p>
+      <div class="about-stats">
+        <div class="about-stat">
+          <span class="about-stat-value" id="statTahun">–</span>
+          <span class="about-stat-label">tahun berjalan</span>
+        </div>
+        <div class="about-stat">
+          <span class="about-stat-value" id="statKegiatan">–</span>
+          <span class="about-stat-label">kegiatan tercatat</span>
+        </div>
+        <div class="about-stat">
+          <span class="about-stat-value" id="statPrestasi">–</span>
+          <span class="about-stat-label">prestasi & karya</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="section section--cork" id="kelembagaan">
     <div class="section-head">
       <h2>Struktur Kelembagaan</h2>
@@ -489,14 +564,22 @@
   <section class="section section--dark" id="arsip">
     <div class="section-head">
       <h2>Arsip Perjalanan</h2>
-      <p>Dari mahasiswa baru sampai hari ini — dicatat, bukan dilupakan.</p>
+      <p>Baru dimulai, tapi sudah dicatat sejak hari pertama.</p>
     </div>
     <div class="timeline">
-      <div class="timeline-item"><span class="timeline-year">2023</span><p>Angkatan resmi terbentuk, orientasi pertama sebagai satu kelas AP.</p></div>
-      <div class="timeline-item"><span class="timeline-year">2024</span><p>Kegiatan lapangan pertama — observasi tata kelola sekolah mitra.</p></div>
-      <div class="timeline-item"><span class="timeline-year">2025</span><p>Proyek kolaborasi antar-divisi, konsolidasi identitas kelas.</p></div>
-      <div class="timeline-item"><span class="timeline-year">2026</span><p>Website ini lahir — etalase digital resmi kelas.</p></div>
+      <div class="timeline-item"><span class="timeline-year">2026</span><p>Angkatan resmi terbentuk — hari pertama kami resmi jadi mahasiswa baru Administrasi Pendidikan.</p></div>
+      <div class="timeline-item"><span class="timeline-year">2026</span><p>Orientasi dan perkenalan kelas, awal dari semuanya.</p></div>
+      <div class="timeline-item"><span class="timeline-year">2026</span><p>Website ini lahir — etalase digital resmi kelas, dibangun di minggu-minggu pertama perkuliahan.</p></div>
+      <div class="timeline-item"><span class="timeline-year">—</span><p>Cerita berikutnya akan menyusul seiring perjalanan kelas kami.</p></div>
     </div>
+  </section>
+
+  <section class="section section--cork" id="prestasi">
+    <div class="section-head">
+      <h2>Prestasi & Karya</h2>
+      <p>Bukti kecil bahwa kelas ini bukan cuma berkumpul, tapi juga menghasilkan.</p>
+    </div>
+    <div class="board-grid" id="prestasiGrid"></div>
   </section>
 
   <section class="section section--cork" id="galeri">
@@ -515,6 +598,18 @@
     <div class="quote-block">
       <p class="quote-text">"Belum pernah ada kelas yang benar-benar merasa seperti unit kerja, sampai kami membangun ini sendiri."</p>
       <span class="quote-attr">— Anggota Kelas AP</span>
+    </div>
+
+    <div class="guestbook-wrap">
+      <form class="guestbook-form" id="guestbookForm">
+        <input type="text" id="gbName" placeholder="Nama kamu" maxlength="50" required autocomplete="off">
+        <textarea id="gbMessage" placeholder="Tulis pesan atau kesan kamu tentang kelas AP…" maxlength="300" required></textarea>
+        <!-- honeypot anti-bot: kolom ini disembunyikan dari manusia lewat CSS, bot form-filler biasanya tetap ngisi -->
+        <input type="text" id="gbHoneypot" class="guestbook-hp" tabindex="-1" autocomplete="off">
+        <button type="submit" class="guestbook-submit" id="gbSubmitBtn">Kirim Pesan</button>
+        <p class="guestbook-status" id="gbStatus"></p>
+      </form>
+      <div class="guestbook-list" id="guestbookList"></div>
     </div>
   </section>
 
@@ -542,11 +637,48 @@
   <source src="lagu-sekolah.mp3" type="audio/mpeg">
 </audio>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>    
 <script>
+  // ===== Koneksi ke Supabase REST API langsung pakai fetch() native =====
+  // (gak perlu install/CDN apa-apa — fetch() sudah bawaan semua browser modern,
+  // jadi library @supabase/supabase-js yang tadinya di-load dari CDN sudah tidak diperlukan)
   const SUPABASE_URL = "https://eeurncjtbbelvpekdiaf.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldXJuY2p0YmJlbHZwZWtkaWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1ODk3OTAsImV4cCI6MjEwNDE2NTc5MH0.Rqeti1o06LEZhxjkJVc4E8sawDqQvOvWJ9nw6ck1dWQ";
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const REST_URL = `${SUPABASE_URL}/rest/v1`;
+  const baseHeaders = {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+  };
+
+  // Helper: ambil data biasa
+  async function sbGet(path, extraHeaders = {}) {
+    const res = await fetch(`${REST_URL}/${path}`, { headers: { ...baseHeaders, ...extraHeaders } });
+    if (!res.ok) return { data: [], total: 0, ok: false };
+    const data = await res.json();
+    let total = 0;
+    const cr = res.headers.get('content-range'); // format: "0-5/42"
+    if (cr) total = parseInt(cr.split('/')[1], 10) || 0;
+    return { data, total, ok: true };
+  }
+
+  // Helper: cuma butuh jumlah total (setara head:true di supabase-js)
+  async function sbCount(path) {
+    const res = await fetch(`${REST_URL}/${path}`, {
+      method: 'HEAD',
+      headers: { ...baseHeaders, Prefer: 'count=exact' }
+    });
+    const cr = res.headers.get('content-range');
+    return cr ? (parseInt(cr.split('/')[1], 10) || 0) : 0;
+  }
+
+  // Helper: kirim data baru (INSERT) ke tabel Supabase
+  async function sbPost(path, body) {
+    const res = await fetch(`${REST_URL}/${path}`, {
+      method: 'POST',
+      headers: { ...baseHeaders, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify(body)
+    });
+    return res.ok;
+  }
 
   const cardColors = ['0f1e3d', '5a4632', '3e5c4f', '6b4a57', '3f4e6b', '7a5a3a'];
   const cardBgClasses = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
@@ -554,7 +686,22 @@
     return `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(name)}&backgroundColor=${hex || '0f1e3d'}`;
   }
 
-  // Referensi tombol hamburger dipakai bareng oleh toggle menu & zoom overlay
+  // Foto ditumpuk di atas kotak warna (photo-block) yang udah kelihatan dari
+  // awal, jadi selama foto asli masih diunduh, gak ada kotak kosong putih —
+  // begitu selesai, foto muncul dengan fade halus (bukan tiba-tiba "pop"),
+  // yang tadinya kerasa kayak glitch render pas pertama kali buka web.
+  function bindImageFade(img) {
+    if (!img) return;
+    if (img.complete && img.naturalWidth > 0) {
+      img.classList.add('is-loaded');
+    } else {
+      img.addEventListener('load', () => img.classList.add('is-loaded'), { once: true });
+    }
+  }
+  function fadeAllImagesIn(root) {
+    root.querySelectorAll('.avatar-img').forEach(bindImageFade);
+  }
+
   const menuToggleBtn = document.getElementById('menu-toggle');
   const iconBars = document.getElementById('icon-bars');
   const iconTimes = document.getElementById('icon-times');
@@ -595,6 +742,10 @@
     musicFab.setAttribute('aria-pressed', String(state));
   }
 
+  // FIX bug angka 0: animateNumber sekarang nunggu promise heroCountReady
+  // selesai (data sudah sampai dari server), bukan cuma nunggu timer 400ms.
+  // Jadi kalau koneksi lagi lambat pas load pertama kali, animasi akan
+  // menunggu data beneran siap dulu, baru jalan — gak akan lagi nembak ke 0.
   function openGate() {
     document.body.classList.remove('locked');
     gate.classList.add('hidden');
@@ -603,7 +754,9 @@
     ambientAudio.volume = 0.25;
     ambientAudio.play().then(() => setPlayingState(true)).catch(() => setPlayingState(false));
 
-    setTimeout(() => animateNumber(numValue), 400);
+    setTimeout(() => {
+      heroCountReady.then(() => animateNumber(numValue));
+    }, 400);
     setTimeout(() => { if (typeof scheduleDrawStrings === 'function') scheduleDrawStrings(); }, 450);
     gate.removeEventListener('click', openGate);
   }
@@ -660,8 +813,6 @@
     zoomFact.textContent = fact;
     zoomOverlay.classList.add('active');
     document.body.classList.add('no-scroll');
-    // FIX: sembunyikan tombol hamburger selama overlay foto aktif
-    // biar ikon X-nya gak ketiban/ketuker sama tombol hamburger (z-index 1010)
     if (menuToggleBtn) menuToggleBtn.style.visibility = 'hidden';
   }
 
@@ -671,9 +822,13 @@
     if (menuToggleBtn) menuToggleBtn.style.visibility = 'visible';
   }
 
+  // FIX: keypress deprecated -> keydown, dan tambah dukungan tombol Spasi
+  // (pola standar aksesibilitas untuk elemen yang berperan sebagai tombol)
   function bindZoomable(card) {
     card.addEventListener('click', () => openZoom(card));
-    card.addEventListener('keypress', (e) => { if (e.key === 'Enter') openZoom(card); });
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openZoom(card); }
+    });
   }
 
   zoomClose.addEventListener('click', closeZoom);
@@ -738,8 +893,8 @@
 
   // ===== Struktur kelembagaan =====
   async function renderPengurus() {
-    const { data, error } = await sb.from('org_members').select('*').eq('category', 'pengurus').order('order_index');
-    if (error || !data) return;
+    const { data, ok } = await sbGet('org_members?category=eq.pengurus&order=order_index');
+    if (!ok) return;
     orgBoardGrid.innerHTML = data.map((m, i) => `
       <div class="pinned zoomable ${m.is_lead ? 'pinned--lead' : ''}" tabindex="0">
         <div class="photo-block ${cardBgClasses[i % 6]}">
@@ -752,6 +907,7 @@
         </div>
       </div>`).join('');
     orgBoardGrid.querySelectorAll('.zoomable').forEach(bindZoomable);
+    fadeAllImagesIn(orgBoardGrid);
     scheduleDrawStrings();
   }
 
@@ -788,6 +944,7 @@
     wrapper.innerHTML = list.map(memberCardHTML).join('');
     Array.from(wrapper.children).forEach(card => {
       bindZoomable(card);
+      fadeAllImagesIn(card);
       memberGrid.appendChild(card);
     });
   }
@@ -802,18 +959,23 @@
     }
   }
 
+  // OPTIMASI: count + range digabung jadi SATU request (pakai header Range +
+  // Prefer: count=exact), bukan dua request terpisah kayak sebelumnya
+  // (dulu: 1x query count, lalu 1x query range — sekarang cukup sekali jalan)
   async function loadMoreAnggota(n) {
-    const { data, error } = await sb.from('org_members').select('*').eq('category', 'anggota')
-      .order('order_index').range(loadedCount, loadedCount + n - 1);
-    if (error || !data) return;
+    const from = loadedCount;
+    const to = loadedCount + n - 1;
+    const { data, total } = await sbGet('org_members?category=eq.anggota&order=order_index', {
+      Range: `${from}-${to}`,
+      Prefer: 'count=exact'
+    });
+    memberTotal = total;
     appendMemberCards(data);
     loadedCount += data.length;
     updateMoreBtn();
   }
 
   async function renderAnggotaInitial() {
-    const { count } = await sb.from('org_members').select('*', { count: 'exact', head: true }).eq('category', 'anggota');
-    memberTotal = count || 0;
     loadedCount = 0;
     colorCounter = 0;
     memberGrid.innerHTML = '';
@@ -824,10 +986,11 @@
     if (!q) { searchMode = false; await renderAnggotaInitial(); return; }
     searchMode = true;
     colorCounter = 0;
-    const { data, error } = await sb.from('org_members').select('*').eq('category', 'anggota')
-      .ilike('name', `%${q}%`).order('order_index');
+    const { data, ok } = await sbGet(
+      `org_members?category=eq.anggota&name=ilike.*${encodeURIComponent(q)}*&order=order_index`
+    );
     memberGrid.innerHTML = '';
-    if (!error && data) appendMemberCards(data);
+    if (ok) appendMemberCards(data);
     updateMoreBtn();
   }
 
@@ -841,8 +1004,8 @@
   // ===== Kegiatan / Galeri =====
   async function renderKegiatan() {
     const grid = document.getElementById('galeriGrid');
-    const { data, error } = await sb.from('activities').select('*').order('order_index');
-    if (error || !data) return;
+    const { data, ok } = await sbGet('activities?order=order_index');
+    if (!ok) return;
     grid.innerHTML = data.map((a, i) => `
       <div class="pinned" tabindex="0">
         <div class="photo-block ${cardBgClasses[i % 6]}">
@@ -856,20 +1019,169 @@
       </div>`).join('');
     grid.querySelectorAll('.pinned').forEach(card => {
       card.addEventListener('click', () => card.classList.toggle('open'));
-      card.addEventListener('keypress', (e) => { if (e.key === 'Enter') card.classList.toggle('open'); });
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.classList.toggle('open'); }
+      });
     });
+    fadeAllImagesIn(grid);
   }
+
+  // ===== Prestasi & Karya =====
+  async function renderPrestasi() {
+    const grid = document.getElementById('prestasiGrid');
+    const { data, ok } = await sbGet('achievements?order=order_index');
+    if (!ok) return;
+    if (data.length === 0) {
+      grid.innerHTML = '<p class="guestbook-empty">Belum ada prestasi tercatat.</p>';
+      return;
+    }
+    grid.innerHTML = data.map((a, i) => `
+      <div class="pinned" tabindex="0">
+        <div class="photo-block ${cardBgClasses[i % 6]}">
+          ${a.photo_url ? `<img class="avatar-img" src="${a.photo_url}" alt="${a.title}" loading="lazy">` : '🏆'}
+        </div>
+        <div class="pin-caption">
+          <span class="pin-role">${a.year || ''}</span>
+          <span class="pin-name">${a.title}</span>
+          <p class="pin-fact">${a.description || ''}</p>
+        </div>
+      </div>`).join('');
+    grid.querySelectorAll('.pinned').forEach(card => {
+      card.addEventListener('click', () => card.classList.toggle('open'));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.classList.toggle('open'); }
+      });
+    });
+    fadeAllImagesIn(grid);
+  }
+
+  // ===== Pesan & Kesan (buku tamu) =====
+  const guestbookForm = document.getElementById('guestbookForm');
+  const gbList = document.getElementById('guestbookList');
+  const gbStatus = document.getElementById('gbStatus');
+  const gbSubmitBtn = document.getElementById('gbSubmitBtn');
+
+  function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function timeAgo(isoString) {
+    const diffMin = Math.floor((Date.now() - new Date(isoString).getTime()) / 60000);
+    if (diffMin < 1) return 'baru saja';
+    if (diffMin < 60) return `${diffMin} menit lalu`;
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour < 24) return `${diffHour} jam lalu`;
+    const diffDay = Math.floor(diffHour / 24);
+    if (diffDay < 30) return `${diffDay} hari lalu`;
+    return new Date(isoString).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  async function loadGuestbook() {
+    const { data, ok } = await sbGet('guestbook?select=name,message,created_at&order=created_at.desc&limit=20');
+    if (!ok) return;
+    if (data.length === 0) {
+      gbList.innerHTML = '<p class="guestbook-empty">Belum ada pesan. Jadilah yang pertama menulis kesan.</p>';
+      return;
+    }
+    gbList.innerHTML = data.map(n => `
+      <div class="guestbook-note">
+        <span class="guestbook-note-name">${escapeHTML(n.name)}<span class="guestbook-note-time">${timeAgo(n.created_at)}</span></span>
+        <p class="guestbook-note-msg">${escapeHTML(n.message)}</p>
+      </div>`).join('');
+  }
+
+  guestbookForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('gbName').value.trim();
+    const message = document.getElementById('gbMessage').value.trim();
+    const honeypot = document.getElementById('gbHoneypot').value;
+
+    gbStatus.textContent = '';
+    gbStatus.className = 'guestbook-status';
+
+    if (honeypot) return; // kena jebakan bot, diam-diam diabaikan
+    if (!name || !message) {
+      gbStatus.textContent = 'Nama dan pesan wajib diisi.';
+      gbStatus.classList.add('err');
+      return;
+    }
+
+    gbSubmitBtn.disabled = true;
+    gbSubmitBtn.textContent = 'Mengirim…';
+
+    const success = await sbPost('guestbook', { name, message });
+
+    gbSubmitBtn.disabled = false;
+    gbSubmitBtn.textContent = 'Kirim Pesan';
+
+    if (success) {
+      guestbookForm.reset();
+      gbStatus.textContent = 'Terkirim, terima kasih!';
+      gbStatus.classList.add('ok');
+      loadGuestbook();
+    } else {
+      gbStatus.textContent = 'Gagal mengirim, coba lagi.';
+      gbStatus.classList.add('err');
+    }
+  });
 
   // ===== Hitung total anggota aktif =====
   async function initHeroCount() {
-    const { count } = await sb.from('org_members').select('*', { count: 'exact', head: true });
-    numValue.dataset.target = count || 0;
+    const total = await sbCount('org_members');
+    numValue.dataset.target = total;
   }
 
-  initHeroCount();
-  renderPengurus();
-  renderAnggotaInitial();
-  renderKegiatan();
+  // ===== Statistik ringan di section "Tentang" =====
+  // Cuma HEAD request (tanpa body data), jadi murah — aman dimuat langsung
+  // di awal biar section "kenapa peduli" langsung kelihatan hidup, tanpa
+  // ikut membebani render pertama kayak query berat lainnya.
+  // Basis tahun disesuaikan ke 2026 (tahun angkatan resmi terbentuk).
+  async function initAboutStats() {
+    const currentYear = new Date().getFullYear();
+    document.getElementById('statTahun').textContent = currentYear - 2026 + 1;
+    const [kegiatanTotal, prestasiTotal] = await Promise.all([
+      sbCount('activities'),
+      sbCount('achievements')
+    ]);
+    document.getElementById('statKegiatan').textContent = kegiatanTotal;
+    document.getElementById('statPrestasi').textContent = prestasiTotal;
+  }
+
+  // Disimpan sebagai promise supaya openGate() bisa "menunggu" fetch ini
+  // selesai sebelum menjalankan animasi angka (lihat fix bug di atas)
+  const heroCountReady = initHeroCount();
+  initAboutStats();
+
+  // ===== OPTIMASI RENDER AWAL =====
+  // Dulu semua fungsi render (struktur, anggota, prestasi, galeri, buku tamu)
+  // langsung ditembak bareng-bareng pas halaman kebuka — 5 request Supabase
+  // rebutan bandwidth di detik-detik pertama, pas font/audio/gate juga lagi
+  // dimuat. Sekarang tiap section baru fetch datanya saat SCROLL MENDEKAT
+  // (pakai IntersectionObserver, rootMargin dikasih jarak 250px biar data
+  // sempat siap sebelum section-nya beneran kelihatan). Hasilnya: beban di
+  // render pertama jauh lebih ringan, dan tiap section tetap terasa instan
+  // pas discroll karena data sudah keburu dimuat sebelum sampai di layar.
+  function lazyLoad(selector, loaderFn) {
+    const el = document.querySelector(selector);
+    if (!el) { loaderFn(); return; }
+    const io = new IntersectionObserver((entries, obs) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          loaderFn();
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '250px 0px' });
+    io.observe(el);
+  }
+
+  lazyLoad('#kelembagaan', renderPengurus);
+  lazyLoad('#anggota', renderAnggotaInitial);
+  lazyLoad('#prestasi', renderPrestasi);
+  lazyLoad('#galeri', renderKegiatan);
+  lazyLoad('#cerita', loadGuestbook);
 
   const revealTargets = document.querySelectorAll('.timeline-item, .quote-block');
   revealTargets.forEach((el) => el.classList.add('reveal'));

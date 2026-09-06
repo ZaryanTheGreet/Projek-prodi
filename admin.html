@@ -69,7 +69,7 @@
   #loginError{ color:#B23A2E; font-size:.83rem; margin-top:.85rem; min-height:1.2em; text-align:center; }
 
   /* --- Tabs --- */
-  .tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;border-bottom:1px solid var(--line);}
+  .tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;border-bottom:1px solid var(--line);flex-wrap:wrap;}
   .tab-btn{padding:.7rem 1.2rem;background:none;border:none;cursor:pointer;font-weight:600;color:rgba(26,26,26,.5);border-bottom:2px solid transparent;}
   .tab-btn.active{color:var(--navy);border-color:var(--gold);}
 
@@ -98,6 +98,13 @@
   .icon-btn{padding:.4rem .7rem;font-size:.8rem;border-radius:4px;cursor:pointer;border:1px solid var(--line);background:#fff;}
   .icon-btn.danger{border-color:#B23A2E;color:#B23A2E;}
   .save-msg{font-size:.85rem;min-height:1.2em;margin-top:.5rem;}
+
+  /* Baris pesan buku tamu gak ada foto, jadi biar teks panjang gak "ditarik"
+     ke tengah vertikal kayak baris anggota/kegiatan, dibikin rata atas sendiri */
+  .item-row.item-row--msg{align-items:flex-start;}
+  .item-row.item-row--msg .item-info p{font-size:.88rem;color:var(--ink);margin-top:.35rem;line-height:1.5;white-space:pre-wrap;}
+  .msg-note{font-size:.85rem;color:rgba(26,26,26,.55);margin-bottom:1rem;}
+  .msg-empty{font-size:.9rem;color:rgba(26,26,26,.5);}
 </style>
 </head>
 <body>
@@ -143,11 +150,15 @@
       <button class="tab-btn active" data-tab="pengurus">Struktur Kelembagaan</button>
       <button class="tab-btn" data-tab="anggota">Anggota Kelas</button>
       <button class="tab-btn" data-tab="kegiatan">Kegiatan / Galeri</button>
+      <button class="tab-btn" data-tab="prestasi">Prestasi & Karya</button>
+      <button class="tab-btn" data-tab="pesan">Pesan & Kesan</button>
     </div>
 
     <div id="tab-pengurus" class="tab-panel"></div>
     <div id="tab-anggota" class="tab-panel" style="display:none;"></div>
     <div id="tab-kegiatan" class="tab-panel" style="display:none;"></div>
+    <div id="tab-prestasi" class="tab-panel" style="display:none;"></div>
+    <div id="tab-pesan" class="tab-panel" style="display:none;"></div>
   </main>
 </div>
 
@@ -209,7 +220,7 @@ async function checkSession() {
 function showLogin(){ loginScreen.style.display='flex'; dashboard.style.display='none'; }
 function showDashboard(){
   loginScreen.style.display='none'; dashboard.style.display='block';
-  loadTab('pengurus'); loadTab('anggota'); loadKegiatan();
+  loadTab('pengurus'); loadTab('anggota'); loadKegiatan(); loadPrestasi(); loadGuestbookAdmin();
 }
 checkSession();
 
@@ -224,9 +235,49 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
 });
 
 // ---------- HELPERS ----------
+
+// PENTING: ini akar dari masalah "gambar lama banget render" di halaman publik.
+// Foto dari HP bisa 3-8 MB, padahal cuma ditampilin di kotak kecil 4:5.
+// Jadi sebelum diupload, foto di-resize (maks 1000px sisi terpanjang) dan
+// dikompres ke JPEG kualitas 80% pakai <canvas> di browser — tanpa perlu
+// library tambahan. Hasilnya biasanya turun dari beberapa MB jadi ~100-300 KB,
+// jadi jauh lebih cepat diunduh pengunjung.
+function compressImage(file, maxDim = 1000, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) { resolve(file); return; } // bukan gambar, biarin apa adanya
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Gagal membaca file'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Gagal membaca gambar'));
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width >= height) { height = Math.round(height * (maxDim / width)); width = maxDim; }
+          else { width = Math.round(width * (maxDim / height)); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          if (!blob) { resolve(file); return; } // gagal kompres, fallback ke file asli
+          const newName = file.name.replace(/\.\w+$/, '') + '.jpg';
+          resolve(new File([blob], newName, { type: 'image/jpeg' }));
+        }, 'image/jpeg', quality);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 async function uploadPhoto(file, folder){
-  const path = `${folder}/${Date.now()}-${file.name.replace(/\s+/g,'_')}`;
-  const { error } = await sb.storage.from('photos').upload(path, file, { upsert:true });
+  let toUpload = file;
+  try { toUpload = await compressImage(file); }
+  catch (e) { console.warn('Kompresi gagal, upload file asli:', e); }
+
+  const path = `${folder}/${Date.now()}-${toUpload.name.replace(/\s+/g,'_')}`;
+  const { error } = await sb.storage.from('photos').upload(path, toUpload, { upsert:true });
   if (error) throw error;
   const { data } = sb.storage.from('photos').getPublicUrl(path);
   return data.publicUrl;
@@ -234,6 +285,14 @@ async function uploadPhoto(file, folder){
 
 function fallbackAvatar(name, hex){
   return `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(name)}&backgroundColor=${hex||'0f1e3d'}`;
+}
+
+// Dipakai buat nampilin nama & isi pesan buku tamu dengan aman (anti-XSS),
+// sama kayak yang dipakai di halaman publik.
+function escapeHTML(str){
+  const div = document.createElement('div');
+  div.textContent = str ?? '';
+  return div.innerHTML;
 }
 
 // ---------- ORG_MEMBERS (pengurus & anggota pakai render sama) ----------
@@ -424,6 +483,152 @@ async function loadKegiatan(){
       if(!confirm(`Hapus "${item.title}"?`)) return;
       const { error } = await sb.from('activities').delete().eq('id', item.id);
       if (error) alert('Gagal hapus: '+error.message); else loadKegiatan();
+    });
+    listHolder.appendChild(row);
+  });
+}
+
+// ---------- PRESTASI & KARYA ----------
+// Struktur tabelnya sama persis kayak activities (year, title, description,
+// photo_url, order_index), jadi form & render-nya juga dibikin mirror dari
+// Kegiatan, cuma nunjuk ke tabel 'achievements'.
+function renderAchievementForm(container, editItem){
+  const isEdit = !!editItem;
+  container.innerHTML = `
+    <div class="form-card">
+      <h3>${isEdit?'Edit':'Tambah'} Prestasi</h3>
+      <div class="form-row">
+        <input type="text" id="p_year" placeholder="Tahun" value="${editItem?.year||''}">
+        <input type="text" id="p_title" placeholder="Judul prestasi / karya" value="${editItem?.title||''}">
+      </div>
+      <div class="form-row full">
+        <textarea id="p_desc" placeholder="Deskripsi">${editItem?.description||''}</textarea>
+      </div>
+      <div class="form-row full">
+        <input type="file" id="p_photo" accept="image/*">
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" id="p_save">${isEdit?'Simpan Perubahan':'Tambah'}</button>
+        ${isEdit ? '<button class="btn btn-ghost" id="p_cancel">Batal</button>' : ''}
+      </div>
+      <p class="save-msg" id="p_msg"></p>
+    </div>`;
+
+  container.querySelector('#p_save').addEventListener('click', async ()=>{
+    const msg = container.querySelector('#p_msg');
+    msg.textContent = 'Menyimpan...';
+    try{
+      const year = container.querySelector('#p_year').value.trim();
+      const title = container.querySelector('#p_title').value.trim();
+      const description = container.querySelector('#p_desc').value.trim();
+      const file = container.querySelector('#p_photo').files[0];
+      if(!title){ msg.textContent = 'Judul wajib diisi.'; return; }
+
+      let photo_url = editItem?.photo_url || null;
+      if (file) photo_url = await uploadPhoto(file, 'prestasi');
+
+      if (isEdit){
+        const { error } = await sb.from('achievements').update({year,title,description,photo_url}).eq('id', editItem.id);
+        if (error) throw error;
+      } else {
+        const { error } = await sb.from('achievements').insert([{year,title,description,photo_url,order_index:999}]);
+        if (error) throw error;
+      }
+      msg.textContent = 'Tersimpan.';
+      loadPrestasi();
+    }catch(e){ msg.textContent = 'Gagal: '+e.message; }
+  });
+
+  if (isEdit) container.querySelector('#p_cancel').addEventListener('click', loadPrestasi);
+}
+
+async function loadPrestasi(){
+  const container = document.getElementById('tab-prestasi');
+  const { data, error } = await sb.from('achievements').select('*').order('order_index');
+  container.innerHTML = '';
+  const formHolder = document.createElement('div');
+  container.appendChild(formHolder);
+  renderAchievementForm(formHolder, null);
+
+  const listHolder = document.createElement('div');
+  container.appendChild(listHolder);
+  if (error){ listHolder.textContent = 'Gagal memuat data: '+error.message; return; }
+
+  if (data.length === 0){
+    listHolder.innerHTML = '<p class="msg-empty">Belum ada prestasi tercatat.</p>';
+    return;
+  }
+
+  data.forEach(item=>{
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+      <img src="${item.photo_url || 'https://placehold.co/60x60?text=%20'}" alt="">
+      <div class="item-info">
+        <strong>${item.title}</strong>
+        <span>${item.year} — ${item.description}</span>
+      </div>
+      <div class="item-actions">
+        <button class="icon-btn" data-action="edit">Edit</button>
+        <button class="icon-btn danger" data-action="delete">Hapus</button>
+      </div>`;
+    row.querySelector('[data-action="edit"]').addEventListener('click', ()=>{
+      renderAchievementForm(formHolder, item);
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+    row.querySelector('[data-action="delete"]').addEventListener('click', async ()=>{
+      if(!confirm(`Hapus "${item.title}"?`)) return;
+      const { error } = await sb.from('achievements').delete().eq('id', item.id);
+      if (error) alert('Gagal hapus: '+error.message); else loadPrestasi();
+    });
+    listHolder.appendChild(row);
+  });
+}
+
+// ---------- PESAN & KESAN (moderasi buku tamu publik) ----------
+// Ini beda dari tab lain: admin CUMA baca & hapus (moderasi), TIDAK nambah
+// atau edit pesan — karena pesan sahnya cuma boleh datang langsung dari
+// pengunjung lewat form publik di halaman utama. Kalau ada yang toxic,
+// spam, atau gak pantas, admin tinggal hapus dari sini.
+async function loadGuestbookAdmin(){
+  const container = document.getElementById('tab-pesan');
+  const { data, error } = await sb.from('guestbook')
+    .select('id,name,message,created_at')
+    .order('created_at', { ascending:false });
+
+  container.innerHTML = '';
+
+  const note = document.createElement('p');
+  note.className = 'msg-note';
+  note.textContent = `Total ${data ? data.length : 0} pesan masuk dari pengunjung. Hapus pesan yang toxic, spam, atau tidak pantas.`;
+  container.appendChild(note);
+
+  const listHolder = document.createElement('div');
+  container.appendChild(listHolder);
+
+  if (error){ listHolder.textContent = 'Gagal memuat data: '+error.message; return; }
+
+  if (data.length === 0){
+    listHolder.innerHTML = '<p class="msg-empty">Belum ada pesan masuk.</p>';
+    return;
+  }
+
+  data.forEach(item=>{
+    const row = document.createElement('div');
+    row.className = 'item-row item-row--msg';
+    row.innerHTML = `
+      <div class="item-info">
+        <strong>${escapeHTML(item.name)}</strong>
+        <span>${new Date(item.created_at).toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' })}</span>
+        <p>${escapeHTML(item.message)}</p>
+      </div>
+      <div class="item-actions">
+        <button class="icon-btn danger" data-action="delete">Hapus</button>
+      </div>`;
+    row.querySelector('[data-action="delete"]').addEventListener('click', async ()=>{
+      if(!confirm(`Hapus pesan dari "${item.name}"?`)) return;
+      const { error } = await sb.from('guestbook').delete().eq('id', item.id);
+      if (error) alert('Gagal hapus: '+error.message); else loadGuestbookAdmin();
     });
     listHolder.appendChild(row);
   });
